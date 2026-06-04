@@ -1,0 +1,114 @@
+// Add extra fields to registration form
+add_action('woocommerce_register_form_start', function() {
+    ?>
+    <p class="form-row form-row-first">
+        <label for="reg_first_name">First Name <span class="required">*</span></label>
+        <input type="text" class="input-text" name="first_name" id="reg_first_name"
+               value="<?php echo isset($_POST['first_name']) ? esc_attr(wp_unslash($_POST['first_name'])) : ''; ?>" />
+    </p>
+
+    <p class="form-row form-row-last">
+        <label for="reg_last_name">Last Name <span class="required">*</span></label>
+        <input type="text" class="input-text" name="last_name" id="reg_last_name"
+               value="<?php echo isset($_POST['last_name']) ? esc_attr(wp_unslash($_POST['last_name'])) : ''; ?>" />
+    </p>
+
+    <div class="clear"></div>
+
+    <p class="form-row form-row-wide">
+        <label>Date of Birth <span class="required">*</span></label>
+        <input type="date" class="input-text" name="dob" id="reg_dob" value="<?php echo isset($_POST['dob']) ? esc_attr($_POST['dob']) : ''; ?>" />
+    </p>
+
+    <p class="form-row form-row-wide">
+        <label>What type of researcher are you? <span class="required">*</span></label>
+        <select name="researcher_type" id="researcher_type" class="select" required>
+            <option value="">Select an option...</option>
+            <option value="private_researcher" <?php selected( $_POST['researcher_type'] ?? '', 'private_researcher' ); ?>>Private Researcher</option>
+            <option value="lab_company_researcher" <?php selected( $_POST['researcher_type'] ?? '', 'lab_company_researcher' ); ?>>Lab/Company Researcher</option>
+            <option value="government_entity_researcher" <?php selected( $_POST['researcher_type'] ?? '', 'government_entity_researcher' ); ?>>Government Entity Researcher</option>
+        </select>
+    </p>
+
+    <p class="form-row form-row-wide" id="phone_field_wrapper" style="display:none;">
+        <label>Phone Number <span class="required">*</span></label>
+        <input type="tel" class="input-text" name="billing_phone" id="reg_billing_phone" value="<?php echo isset($_POST['billing_phone']) ? esc_attr($_POST['billing_phone']) : ''; ?>" />
+    </p>
+
+    <p class="form-row form-row-wide" id="company_name_wrapper" style="display:none;">
+        <label>Company Name <span class="required">*</span></label>
+        <input type="text" class="input-text" name="company_name" id="reg_company_name" value="<?php echo isset($_POST['company_name']) ? esc_attr($_POST['company_name']) : ''; ?>" />
+    </p>
+
+    <script type="text/javascript">
+        document.getElementById('researcher_type').addEventListener('change', function() {
+            var phoneWrapper = document.getElementById('phone_field_wrapper');
+            var phoneInput = document.getElementById('reg_billing_phone');
+            var companyNameWrapper = document.getElementById('company_name_wrapper');
+            var companyNameInput = document.getElementById('reg_company_name');
+
+            if (this.value === 'private_researcher') {
+                phoneWrapper.style.display = 'block';
+                phoneInput.setAttribute('required', 'required');
+                companyNameWrapper.style.display = 'none';
+                companyNameInput.removeAttribute('required');
+            } else if (this.value === 'lab_company_researcher' || this.value === 'government_entity_researcher') {
+                companyNameWrapper.style.display = 'block';
+                companyNameInput.setAttribute('required', 'required');
+                phoneWrapper.style.display = 'none';
+                phoneInput.removeAttribute('required');
+            } else {
+                phoneWrapper.style.display = 'none';
+                phoneInput.removeAttribute('required');
+                companyNameWrapper.style.display = 'none';
+                companyNameInput.removeAttribute('required');
+            }
+        });
+
+        // Trigger change on page load to restore previous selection
+        document.getElementById('researcher_type').dispatchEvent(new Event('change'));
+    </script>
+    <?php
+});
+
+// Validate fields
+add_filter('woocommerce_registration_errors', function($errors, $username, $email) {
+    if (empty($_POST['first_name'])) {
+        $errors->add('first_name_error', __('First name is required.', 'woocommerce'));
+    }
+    if (empty($_POST['last_name'])) {
+        $errors->add('last_name_error', __('Last name is required.', 'woocommerce'));
+    }
+    if (empty($_POST['dob'])) {
+        $errors->add('dob_error', __('Date of Birth is required.', 'woocommerce'));
+    }
+    if (isset($_POST['researcher_type']) && $_POST['researcher_type'] === 'private_researcher' && empty($_POST['billing_phone'])) {
+        $errors->add('phone_error', __('Phone is required for Private Researchers.', 'woocommerce'));
+    }
+    if (isset($_POST['researcher_type']) && in_array($_POST['researcher_type'], ['lab_company_researcher','government_entity_researcher']) && empty($_POST['company_name'])) {
+        $errors->add('company_name_error', __('Company Name is required for Lab/Company or Government Researchers.', 'woocommerce'));
+    }
+    return $errors;
+}, 10, 3);
+
+// Save fields to user meta
+add_action('woocommerce_created_customer', function($customer_id) {
+    if (isset($_POST['first_name'])) {
+        update_user_meta($customer_id, 'first_name', sanitize_text_field($_POST['first_name']));
+    }
+    if (isset($_POST['last_name'])) {
+        update_user_meta($customer_id, 'last_name', sanitize_text_field($_POST['last_name']));
+    }
+    if (isset($_POST['dob'])) {
+        update_user_meta($customer_id, 'dob', sanitize_text_field($_POST['dob']));
+    }
+    if (isset($_POST['researcher_type'])) {
+        update_user_meta($customer_id, 'researcher_type', sanitize_text_field($_POST['researcher_type']));
+    }
+    if (!empty($_POST['billing_phone'])) {
+        update_user_meta($customer_id, 'billing_phone', sanitize_text_field($_POST['billing_phone']));
+    }
+    if (!empty($_POST['company_name'])) {
+        update_user_meta($customer_id, 'company_name', sanitize_text_field($_POST['company_name']));
+    }
+});
