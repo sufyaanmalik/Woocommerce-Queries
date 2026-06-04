@@ -1,0 +1,34 @@
+/* ==========================================
+   1️⃣ Redirect guests to My Account
+========================================== */
+add_action( 'template_redirect', 'force_guest_to_myaccount' );
+
+function force_guest_to_myaccount() {
+
+    if ( is_user_logged_in() ) {
+        return;
+    }
+
+    // Allow My Account page
+    if ( is_page( 'my-account' ) ) {
+        return;
+    }
+
+    // Allow AJAX & admin
+    if ( is_admin() || wp_doing_ajax() ) {
+        return;
+    }
+
+    wp_safe_redirect( site_url( '/my-account/' ) );
+    exit;
+}
+
+
+/* ==========================================
+   2️⃣ Redirect after WooCommerce login
+========================================== */
+add_filter( 'woocommerce_login_redirect', 'custom_login_redirect_home', 10, 2 );
+
+function custom_login_redirect_home( $redirect, $user ) {
+    return home_url();
+}
