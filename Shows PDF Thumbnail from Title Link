@@ -1,0 +1,63 @@
+/**
+ * Show PDF generated thumbnail before PDF link in a clean grid using plugin function
+ */
+function nmp_show_pdf_generated_thumbnail($content) {
+    if (is_admin() || is_feed()) {
+        return $content;
+    }
+
+    // Match all PDF links in the content area
+    preg_match_all(
+        '/<a[^>]+href=["\']([^"\']+\.pdf)["\'][^>]*>(.*?)<\/a>/i',
+        $content,
+        $matches
+    );
+
+    if (!empty($matches[1])) {
+        $processed = array();
+
+        foreach ($matches[1] as $key => $pdf_url) {
+            $old_link_html = $matches[0][$key];
+
+            if (in_array($old_link_html, $processed)) {
+                continue;
+            }
+
+            $attachment_id = attachment_url_to_postid($pdf_url);
+
+            if (!$attachment_id) {
+                continue;
+            }
+
+            // Use the plugin's native custom function to extract the true thumbnail URL path
+            $thumbnail_url = '';
+            if (function_exists('get_pdf_thumbnail_url')) {
+                $thumbnail_url = get_pdf_thumbnail_url($attachment_id);
+            }
+
+            // Fallback safety check if the function didn't return a value or isn't generated yet
+            if (empty($thumbnail_url)) {
+                $thumbnail_url = 'https://placehold.co/300x400/222222/FFFFFF?text=View+COA+PDF';
+            }
+
+            // Construct the final card layout 
+            $link_text = strip_tags($matches[2][$key]);
+            
+            $new_html = '
+            <div class="coa-pdf-item">
+                <a href="' . esc_url($pdf_url) . '" target="_blank" rel="noopener noreferrer" class="coa-card-anchor">
+                    <div class="coa-thumbnail-wrapper">
+                        <img class="coa-pdf-thumbnail" src="' . esc_url($thumbnail_url) . '" alt="' . esc_attr($link_text) . ' Preview" loading="lazy" />
+                    </div>
+                    <h3 class="coa-pdf-title">' . esc_html($link_text) . '</h3>
+                </a>
+            </div>';
+
+            $content = str_replace($old_link_html, $new_html, $content);
+            $processed[] = $old_link_html;
+        }
+    }
+
+    return $content;
+}
+add_filter('the_content', 'nmp_show_pdf_generated_thumbnail', 20);
