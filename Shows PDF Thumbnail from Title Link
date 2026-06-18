@@ -61,3 +61,76 @@ function nmp_show_pdf_generated_thumbnail($content) {
     return $content;
 }
 add_filter('the_content', 'nmp_show_pdf_generated_thumbnail', 20);
+
+/*********  Add This CSS in your Additional CSS   ********/
+
+/* Individual Grid Card Item */
+.coa-pdf-item {
+    width: calc(32.333% - 16px); /* 3 Columns Layout */
+    min-width: 220px;
+    background: #111111; /* Kept it dark to match your page style */
+    border: 1px solid #222222;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    box-sizing: border-box;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+	float: left !important;
+	margin-right: 20px !important;
+}
+
+.coa-pdf-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(255,255,255,0.05);
+}
+
+.coa-card-anchor {
+    text-decoration: none !important;
+    color: #ffffff !important; /* White text for contrast */
+    display: block;
+}
+
+/* Thumbnail Wrap & Image Rules */
+.coa-thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    border: 1px solid #2d2d2d;
+}
+
+.coa-pdf-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Typography Title Styling */
+.coa-pdf-title {
+    font-size: 20px !important;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-top: 10px !important;
+    color: #ffffff !important;
+}
+
+.coas-list-title-with-pdfs {
+    display: flex;
+}
+
+.coas-list-title-with-pdfs h2 {
+	margin-bottom: 40px !important;
+}
+
+/* Responsive columns scaling down */
+@media (max-width: 991px) {
+    .coa-pdf-item { width: calc(50% - 12px); 
+	margin-right: 0px !important; }
+}
+@media (max-width: 550px) {
+    .coa-pdf-item { width: 100%; }
+}
